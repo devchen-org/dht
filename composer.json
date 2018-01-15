@@ -1,0 +1,36 @@
+{
+  "name": "devchen-org/dht",
+  "description": "dht.",
+  "keywords": [
+    "dht",
+    "torrent",
+    "infohash"
+  ],
+  "homepage": "https://github.com/devchen-org/dht",
+  "authors": [
+    {
+      "name": "Chen Yang",
+      "email": "devchen.org@outlook.com",
+      "homepage": "https://devchen.org"
+    }
+  ],
+  "type": "library",
+  "require": {
+    "php": ">=7.0.0",
+    "bhutanio/torrent-bencode": "dev-master",
+    "symfony/console": "^4.0",
+    "rych/bencode": "^1.0"
+  },
+  "require-dev": {
+    "eaglewu/swoole-ide-helper": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "DevChen\\": "src/"
+    },
+    "files": [
+      "src/functions/function.php"
+    ]
+  },
+  "minimum-stability": "dev"
+}
