@@ -1,6 +1,6 @@
 {
   "name": "devchen-org/dht",
-  "description": "dht.",
+  "description": "join dht network,get infohash,query torrent metadata.",
   "keywords": [
     "dht",
     "torrent",

@@ -1,4 +1,5 @@
 # dht
+**join dht network,get infohash,query torrent metadata.**
 ## 快速使用
 - php>=7.0.0
 - 安装[Swoole](https://www.swoole.com/) 扩展
