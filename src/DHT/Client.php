@@ -177,8 +177,7 @@ class Client
             'y' => 'r',
             'r' => [
                 'id' => $this->nid,
-                // 'nodes' => $this->compulsory->encodeNodes($this->getNodes(16)),
-                'nodes' => '',
+                'nodes' => $this->compulsory->encodeNodes($this->getNodes(8)),
             ]
         ];
 
@@ -202,8 +201,7 @@ class Client
             'y' => 'r',
             'r' => [
                 'id' => $this->nid,
-                // 'nodes' => $this->compulsory->encodeNodes($this->getNodes()),
-                'nodes' => '',
+                'nodes' => $this->compulsory->encodeNodes($this->getNodes(8)),
                 'token' => $token
             ]
         ];
