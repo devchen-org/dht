@@ -14,6 +14,7 @@
       "homepage": "https://devchen.org"
     }
   ],
+  "license": "MIT",
   "type": "library",
   "require": {
     "php": ">=7.0.0",
