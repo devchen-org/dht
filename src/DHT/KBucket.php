@@ -7,7 +7,7 @@ class KBucket
 
     public function __construct()
     {
-
+        //TODO 实现 K桶
     }
 
 }
