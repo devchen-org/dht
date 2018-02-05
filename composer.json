@@ -19,8 +19,8 @@
   "require": {
     "php": ">=7.0.0",
     "bhutanio/torrent-bencode": "dev-master",
-    "symfony/console": "^4.0",
-    "rych/bencode": "^1.0"
+    "symfony/console": "~3.3",
+    "rych/bencode": "~1.0"
   },
   "require-dev": {
     "eaglewu/swoole-ide-helper": "dev-master"
