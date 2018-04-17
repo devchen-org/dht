@@ -71,11 +71,16 @@ class Spider extends Command
 
         $this->client = new Client($this->swooleServer, $this->nid, $this->bootstrapNodes);
 
+        $this->swooleServer->on('Start', function (swoole_server $swooleServer) {
+            console_log('Started');
+        });
+
         $this->swooleServer->on('WorkerStart', function (swoole_server $swooleServer, $worker_id) {
             $this->swooleServer->tick(10000, function () {
                 for ($i = 0; $i < 10; $i++) {
                     $swooleProcess = new swoole_process(function (swoole_process $swooleProcess) {
                         $this->client->autoFindNode();
+                        $swooleProcess->exit(0);
                     });
                     $pid = $swooleProcess->start();
                     $workers[$pid] = $swooleProcess;
