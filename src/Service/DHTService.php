@@ -8,28 +8,15 @@ use Swoole\Server\Task;
 /**
  * 字节存储次序
  */
-define(BIG_ENDIAN, pack('L', 1) === pack('N', 1));
+define('BIG_ENDIAN', pack('L', 1) === pack('N', 1));
 
 class DHTService
 {
-    protected $bootstrapNodes = [
-        ['router.bittorrent.com', 6881],
-        ['dht.transmissionbt.com', 6881],
-        ['router.utorrent.com', 6881],
-    ];
-
     /**
      * 定时寻找节点时间间隔/毫秒
      * @var int
      */
-    const AUTO_FIND_TIME = 3000;
-
-    /**
-     * 保存node_id最大数量
-     *
-     * @var int
-     */
-    const MAX_NODE_SIZE = 300;
+    protected const AUTO_FIND_TIME = 3000;
 
     /**
      *
@@ -44,7 +31,7 @@ class DHTService
      *
      * @var
      */
-    protected $nodeId;
+    protected $selfNodeId;
 
     /**
      * @var Server
@@ -60,6 +47,8 @@ class DHTService
         $this->swooleServer->on('Packet', [$this, 'packet']);
         $this->swooleServer->on('Task', [$this, 'task']);
         $this->swooleServer->on('Finish', [$this, 'finish']);
+
+
     }
 
     protected function config()
@@ -121,7 +110,13 @@ class DHTService
 
     public function workerStart(Server $server, $worker_id)
     {
+        swoole_timer_tick(self::AUTO_FIND_TIME, function ($timer_id) {
+            if (count($this->table) == 0) {
 
+            } else {
+
+            }
+        });
     }
 
     public function packet(Server $server, $data, $client_info)
