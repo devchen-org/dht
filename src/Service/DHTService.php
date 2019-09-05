@@ -2,8 +2,12 @@
 
 namespace DevChen\DHT\Service;
 
+use DevChen\DHT\Chain\DHTClient;
+use DevChen\DHT\Chain\DHTserver;
 use Swoole\Server;
 use Swoole\Server\Task;
+use Rych\Bencode\Bencode;
+use Exception;
 
 /**
  * 字节存储次序
@@ -19,24 +23,20 @@ class DHTService
     protected const AUTO_FIND_TIME = 3000;
 
     /**
-     *
-     * 初始化路由表
-     *
-     * @var array
-     */
-    protected $table = [];
-
-    /**
-     * 伪造设置自身node id
-     *
-     * @var
-     */
-    protected $selfNodeId;
-
-    /**
      * @var Server
      */
     protected $swooleServer;
+
+    /**
+     * @var DHTserver
+     */
+    protected $dhtServer;
+
+    /**
+     * @var DHTClient
+     */
+    protected $dhtClient;
+
 
     public function __construct()
     {
@@ -48,7 +48,8 @@ class DHTService
         $this->swooleServer->on('Task', [$this, 'task']);
         $this->swooleServer->on('Finish', [$this, 'finish']);
 
-
+        $this->dhtServer = new DHTserver($this->swooleServer);
+        $this->dhtClient = new DHTClient($this->dhtServer);
     }
 
     protected function config()
@@ -111,17 +112,32 @@ class DHTService
     public function workerStart(Server $server, $worker_id)
     {
         swoole_timer_tick(self::AUTO_FIND_TIME, function ($timer_id) {
-            if (count($this->table) == 0) {
-
-            } else {
-
-            }
+            $this->dhtServer->joinDHT();
         });
     }
 
     public function packet(Server $server, $data, $client_info)
     {
-
+        if (strlen($data) == 0) {
+            return false;
+        }
+        $msg = Bencode::decode($data);
+        try {
+            if (!isset($msg['y'])) {
+                return false;
+            }
+            if ($msg['y'] == 'r') {
+                // 如果是回复, 且包含nodes信息 添加到路由表
+                if (array_key_exists('nodes', $msg['r'])) {
+                    $this->dhtClient->response($msg, [$client_info['address'], $client_info['port']]);
+                }
+            } elseif ($msg['y'] == 'q') {
+                // 如果是请求, 则执行请求判断
+                $this->dhtClient->request($msg, [$client_info['address'], $client_info['port']]);
+            }
+        } catch (Exception $e) {
+            //var_dump($e->getMessage());
+        }
     }
 
     public function task(Server $server, Task $task)
