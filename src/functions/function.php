@@ -28,6 +28,20 @@ if (!function_exists('decode_nodes')) {
     }
 }
 
+if (!function_exists('encode_nodes')) {
+    function encode_nodes(array $nodes)
+    {
+        // 判断当前nodes列表是否为空
+        if (count($nodes) == 0)
+            return $nodes;
+        $n = '';
+        // 循环对node进行编码
+        foreach ($nodes as $node)
+            $n .= pack('a20Nn', $node->nid, ip2long($node->ip), $node->port);
+        return $n;
+    }
+}
+
 if (!function_exists('c_log')) {
     function c_log(string $msg)
     {

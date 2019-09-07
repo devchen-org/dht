@@ -5,11 +5,25 @@ namespace DevChen\DHT\Chain;
 
 class DHTClient
 {
+    /**
+     * @var DHTserver
+     */
     protected $dhtServer;
+
+    /**
+     * @var
+     */
+    protected $lastIp;
+
+    /**
+     * @var VirtualNode
+     */
+    protected $virtualNode;
 
     public function __construct(DHTserver $dhtServer)
     {
         $this->dhtServer = $dhtServer;
+        $this->virtualNode = new VirtualNode();
     }
 
     /**
@@ -24,7 +38,6 @@ class DHTClient
         if (!isset($msg['r']['nodes']) || !isset($msg['r']['nodes'][1]))
             return;
         // 对nodes数据进行解码
-        // '朋友'.$address[0].'在线'.PHP_EOL;
         $nodes = decode_nodes($msg['r']['nodes']);
         // 对nodes循环处理
         foreach ($nodes as $node) {
@@ -43,23 +56,145 @@ class DHTClient
     public function request($msg, $address)
     {
         switch ($msg['q']) {
-            case 'ping'://确认你是否在线
-                echo '朋友' . $address[0] . '正在确认你是否在线' . PHP_EOL;
+            case 'ping':
+                // 确认你是否在线
+                c_log('朋友' . $address[0] . '正在确认你是否在线');
+                $this->onPing($msg, $address);
                 break;
-            case 'find_node': //向服务器发出寻找节点的请求
-                echo '朋友' . $address[0] . '向你发出寻找节点的请求' . PHP_EOL;
+            case 'find_node':
+                // 向服务器发出寻找节点的请求
+                c_log('朋友' . $address[0] . '向你发出寻找节点的请求');
                 break;
             case 'get_peers':
-                echo '朋友' . $address[0] . '向你发出查找资源的请求' . PHP_EOL;
                 // 处理get_peers请求
+                c_log('朋友' . $address[0] . '向你发出查找资源的请求');
                 break;
             case 'announce_peer':
-                echo '朋友' . $address[0] . '找到资源了 通知你一声' . PHP_EOL;
                 // 处理announce_peer请求
+                c_log('朋友' . $address[0] . '找到资源了 通知你一声');
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * @param $msg
+     * @param $address
+     */
+    protected function onPing($msg, $address)
+    {
+        // 获取对端node id
+        $id = $msg['a']['id'];
+        // 生成回复数据
+        $msg = [
+            't' => $msg['t'],
+            'y' => 'r',
+            'r' => [
+                'id' => $this->virtualNode->getNeighbor($id, $this->dhtServer->selfNodeId),
+            ]
+        ];
+        // 将node加入路由表
+        $this->append(new Node($id, $address[0], $address[1]));
+        // 发送回复数据
+        $this->dhtServer->sendResponse($msg, $address);
+    }
+
+    /**
+     * @param $msg
+     * @param $address
+     */
+    protected function onFindNode($msg, $address)
+    {
+        // 获取对端node id
+        $id = $msg['a']['id'];
+        // 生成回复数据
+        $msg = [
+            't' => $msg['t'],
+            'y' => 'r',
+            'r' => [
+                'id' => $this->virtualNode->getNeighbor($id, $this->dhtServer->selfNodeId),
+                'nodes' => encode_nodes($this->getNodes(16))
+            ]
+        ];
+        // 将node加入路由表
+        $this->append(new Node($id, $address[0], $address[1]));
+        // 发送回复数据
+        $this->dhtServer->sendResponse($msg, $address);
+    }
+
+    /**
+     * @param $msg
+     * @param $address
+     */
+    protected function onGetPeers($msg, $address)
+    {
+        // 获取info_hash信息
+        $infohash = $msg['a']['info_hash'];
+        // 获取node id
+        $id = $msg['a']['id'];
+        // 生成回复数据
+        $msg = [
+            't' => $msg['t'],
+            'y' => 'r',
+            'r' => [
+                'id' => $this->virtualNode->getNeighbor($id, $this->dhtServer->selfNodeId),
+                'nodes' => '',
+                'token' => substr($infohash, 0, 2)
+            ]
+        ];
+        // 将node加入路由表
+        $this->append(new Node($id, $address[0], $address[1]));
+        // 向对端发送回复数据
+        $this->dhtServer->sendResponse($msg, $address);
+    }
+
+    /**
+     * @param $msg
+     * @param $address
+     */
+    protected function onAnnouncePeer($msg, $address)
+    {
+        $infohash = $msg['a']['info_hash'];
+        $port = $msg['a']['port'];
+        $token = $msg['a']['token'];
+        $id = $msg['a']['id'];
+        $tid = $msg['t'];
+
+        // 验证token是否正确
+        if (substr($infohash, 0, 2) != $token)
+            return;
+
+        if (isset($msg['a']['implied_port']) && $msg['a']['implied_port'] != 0) {
+            $port = $address[1];
+        }
+
+        if ($port >= 65536 || $port <= 0) {
+            return;
+        }
+
+        if ($tid == '') {
+            //return;
+        }
+
+        // 生成回复数据
+        $msg = [
+            't' => $msg['t'],
+            'y' => 'r',
+            'r' => [
+                'id' => $this->dhtServer->selfNodeId,
+            ]
+        ];
+
+        if ($address[0] == $this->lastIp) {
+            return;
+        }
+        $this->lastIp = $ip = $address[0];
+        // 发送请求回复
+        $this->dhtServer->sendResponse($msg, $address);
+
+        c_log($infohash);
+        return;
     }
 
     /**
@@ -90,5 +225,14 @@ class DHTClient
             array_shift($this->dhtServer->table);
 
         return array_push($this->dhtServer->table, $node);
+    }
+
+    protected function getNodes($len = 8)
+    {
+        if (count($this->dhtServer->table) <= $len) {
+            return $this->dhtServer->table;
+        }
+        // shuffle($table);
+        return array_slice($this->dhtServer->table, 0, $len);
     }
 }

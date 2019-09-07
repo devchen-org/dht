@@ -136,7 +136,7 @@ class DHTService
                 $this->dhtClient->request($msg, [$client_info['address'], $client_info['port']]);
             }
         } catch (Exception $e) {
-            //var_dump($e->getMessage());
+            c_log($e->getMessage());
         }
     }
 

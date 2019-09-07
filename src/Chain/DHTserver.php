@@ -99,7 +99,7 @@ class DHTserver
         }
     }
 
-    protected function sendResponse($msg, $address)
+    public function sendResponse($msg, $address)
     {
         if (!filter_var($address[0], FILTER_VALIDATE_IP)) {
             return false;
