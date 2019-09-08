@@ -64,7 +64,7 @@ class DHTClient
             case 'find_node':
                 // 向服务器发出寻找节点的请求
                 // c_log('朋友' . $address[0] . '向你发出寻找节点的请求');
-                $this->onFindNode($msg, $address);
+                // $this->onFindNode($msg, $address);
                 break;
             case 'get_peers':
                 // 处理get_peers请求
