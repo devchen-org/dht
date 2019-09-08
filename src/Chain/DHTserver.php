@@ -44,7 +44,7 @@ class DHTserver
     /**
      * @var Server
      */
-    protected $swooleServer;
+    public $swooleServer;
 
     public function __construct(Server $swooleServer)
     {

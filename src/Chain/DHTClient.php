@@ -58,20 +58,23 @@ class DHTClient
         switch ($msg['q']) {
             case 'ping':
                 // 确认你是否在线
-                c_log('朋友' . $address[0] . '正在确认你是否在线');
+                // c_log('朋友' . $address[0] . '正在确认你是否在线');
                 $this->onPing($msg, $address);
                 break;
             case 'find_node':
                 // 向服务器发出寻找节点的请求
-                c_log('朋友' . $address[0] . '向你发出寻找节点的请求');
+                // c_log('朋友' . $address[0] . '向你发出寻找节点的请求');
+                $this->onFindNode($msg, $address);
                 break;
             case 'get_peers':
                 // 处理get_peers请求
-                c_log('朋友' . $address[0] . '向你发出查找资源的请求');
+                // c_log('朋友' . $address[0] . '向你发出查找资源的请求');
+                $this->onGetPeers($msg, $address);
                 break;
             case 'announce_peer':
                 // 处理announce_peer请求
-                c_log('朋友' . $address[0] . '找到资源了 通知你一声');
+                c_log('朋友' . $address[0] . '找到资源了通知你一声');
+                $this->onAnnouncePeer($msg, $address);
                 break;
             default:
                 break;
@@ -131,6 +134,7 @@ class DHTClient
     {
         // 获取info_hash信息
         $infohash = $msg['a']['info_hash'];
+        // c_log(bin2hex($infohash));
         // 获取node id
         $id = $msg['a']['id'];
         // 生成回复数据
@@ -139,7 +143,7 @@ class DHTClient
             'y' => 'r',
             'r' => [
                 'id' => $this->virtualNode->getNeighbor($id, $this->dhtServer->selfNodeId),
-                'nodes' => '',
+                'nodes' => encode_nodes($this->getNodes()),
                 'token' => substr($infohash, 0, 2)
             ]
         ];
@@ -193,7 +197,7 @@ class DHTClient
         // 发送请求回复
         $this->dhtServer->sendResponse($msg, $address);
 
-        c_log($infohash);
+        c_log(bin2hex($infohash));
         return;
     }
 

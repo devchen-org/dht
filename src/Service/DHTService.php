@@ -121,8 +121,9 @@ class DHTService
         if (strlen($data) == 0) {
             return false;
         }
-        $msg = Bencode::decode($data);
         try {
+            $msg = Bencode::decode($data);
+
             if (!isset($msg['y'])) {
                 return false;
             }
